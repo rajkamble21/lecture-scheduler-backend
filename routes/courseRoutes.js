@@ -1,6 +1,18 @@
 const express = require('express');
-const { Course, Lecture } = require('../models');
+const multer = require('multer');
+const { Course } = require('../models');
 const router = express.Router();
+
+// Multer configuration for file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/');
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname);
+  },
+});
+const upload = multer({ storage: storage });
 
 
 // GET all courses
@@ -13,10 +25,25 @@ router.get('/courses', async (req, res) => {
   }
 });
 
-// Add a course
-router.post('/courses', async (req, res) => {
+// GET a course by ID
+router.get('/courses/:id', async (req, res) => {
   try {
-    const { name, level, description, imageUrl } = req.body;
+    const courseId = req.params.id;
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+    res.status(200).json(course);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Add a course with image upload
+router.post('/courses', upload.single('imageUrl'), async (req, res) => {
+  try {
+    const { name, level, description } = req.body;
+    const imageUrl = req.file ? req.file.path : null; // Get the uploaded image path
     const course = new Course({ name, level, description, imageUrl });
     await course.save();
     res.status(201).json({ message: 'Course added successfully' });
@@ -25,10 +52,11 @@ router.post('/courses', async (req, res) => {
   }
 });
 
-// Update a course
-router.put('/courses/:id', async (req, res) => {
+// Update a course with image upload
+router.put('/courses/:id', upload.single('imageUrl'), async (req, res) => {
   try {
-    const { name, level, description, imageUrl } = req.body;
+    const { name, level, description } = req.body;
+    const imageUrl = req.file ? req.file.path : null; // Get the uploaded image path
     await Course.findByIdAndUpdate(req.params.id, { name, level, description, imageUrl });
     res.status(200).json({ message: 'Course updated successfully' });
   } catch (error) {
@@ -36,10 +64,15 @@ router.put('/courses/:id', async (req, res) => {
   }
 });
 
-// Delete a course
+
+// Delete a course by ID
 router.delete('/courses/:id', async (req, res) => {
   try {
-    await Course.findByIdAndDelete(req.params.id);
+    const courseId = req.params.id;
+    const deletedCourse = await Course.findByIdAndDelete(courseId);
+    if (!deletedCourse) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
     res.status(200).json({ message: 'Course deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: error.message });

@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require("express");
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
@@ -13,12 +15,15 @@ const { verifyToken } = require('./middleware/authMiddleware');
 
 
 const app = express();
-const PORT = 4000;
+const PORT = process.env.PORT || 4000;
 
+
+// Serve static files from the 'uploads' directory
+app.use(express.static('uploads'));
 
 app.use(cors({
-  origin: 'http://localhost:3000',
-  optionsSuccessStatus: 200 // Some legacy browsers (IE11, various SmartTVs) choke on 204
+  origin: '*', 
+  optionsSuccessStatus: 200 
 }));
 
 app.use(express.json());
@@ -33,8 +38,7 @@ app.use('/api', courseRoutes);
 app.use('/api', lectureRoutes);
 
 
-
-mongoose.connect("mongodb://localhost:27017/lecture_scheduler", {
+mongoose.connect(process.env.DB_CONNECTION, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
