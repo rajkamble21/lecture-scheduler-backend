@@ -38,7 +38,7 @@ app.use('/api', courseRoutes);
 app.use('/api', lectureRoutes);
 
 
-mongoose.connect(process.env.DB_CONNECTION, {
+mongoose.connect("mongodb+srv://rajgroww216:3k51Ko8ZvCEigQB9@cluster0.atomsws.mongodb.net/lecture_scheduler?retryWrites=true&w=majority&appName=Cluster0", {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
